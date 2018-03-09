@@ -2,6 +2,7 @@ package hello;
 
 import java.util.List;
 
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 import org.springframework.http.converter.HttpMessageConverter;
@@ -10,19 +11,16 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurationSupp
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.cfg.SerializerFactoryConfig;
 
 @Configuration
-@Profile("serializationFactory")
-public class WebConfig2 extends WebMvcConfigurationSupport {
+@Profile("mixIn")
+public class MixInWebConfig extends WebMvcConfigurationSupport {
 
-	public MappingJackson2HttpMessageConverter customJackson2HttpMessageConverter() {
+	@Bean
+	public MappingJackson2HttpMessageConverter customJackson2HttpMessageConverter2() {
 		MappingJackson2HttpMessageConverter jsonConverter = new MappingJackson2HttpMessageConverter();
 		ObjectMapper objectMapper = new ObjectMapper();
-		MyBeanSerializerFactory customSerializationFactory = new MyBeanSerializerFactory(new SerializerFactoryConfig());
-		customSerializationFactory.getClasses().add(DTO1.class);
-		customSerializationFactory.getFieldsToIgnore().add("property2");
-		objectMapper.setSerializerFactory(customSerializationFactory);
+		objectMapper.addMixIn(DTO1.class, FooMixIn.class);
 		objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 		jsonConverter.setObjectMapper(objectMapper);
 		return jsonConverter;
@@ -30,6 +28,6 @@ public class WebConfig2 extends WebMvcConfigurationSupport {
 
 	@Override
 	public void configureMessageConverters(List<HttpMessageConverter<?>> converters) {
-		converters.add(customJackson2HttpMessageConverter());
+		converters.add(customJackson2HttpMessageConverter2());
 	}
 }
